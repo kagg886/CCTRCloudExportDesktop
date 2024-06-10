@@ -19,6 +19,11 @@ fun exec(vararg cmd: String): String {
     return SequenceInputStream(p.inputStream, p.errorStream).readAllBytes().decodeToString()
 }
 
+fun execWithArgs(cmd: Array<String>): String {
+    val p = Runtime.getRuntime().exec(cmd)
+    return SequenceInputStream(p.inputStream, p.errorStream).readAllBytes().decodeToString()
+}
+
 suspend fun EdgeDriver.captchaImage(html: String): BufferedImage {
     return CompletableFuture.supplyAsync {
         var rectangle: WebElement? = null

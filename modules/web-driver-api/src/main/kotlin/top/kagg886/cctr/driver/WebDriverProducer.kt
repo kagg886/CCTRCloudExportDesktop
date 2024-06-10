@@ -6,29 +6,32 @@ import org.openqa.selenium.edge.EdgeOptions
 import java.io.File
 
 internal object WebDriverProducer {
-    private var init = false
-    private lateinit var root: File
+    var init = false
+    private lateinit var driverFile: File
+    private lateinit var executableFile: File
 
 
     fun newHeadlessDriver(): EdgeDriver {
         check(init) {
             "please call init()"
         }
-        return EdgeDriver(EdgeDriverService.createDefaultService(), object : EdgeOptions() {
-            init {
-                addArguments("headless")
-                addArguments("--disable-gpu")
-                addArguments("lang=lang=zh_CN.UTF-8")
-                setBinary(File(root, "chromedriver"))
-            }
-        })
+        return EdgeDriver(EdgeDriverService.Builder().usingDriverExecutable(driverFile).usingAnyFreePort().build(),
+            object : EdgeOptions() {
+                init {
+                    addArguments("headless")
+                    addArguments("--disable-gpu")
+                    addArguments("lang=lang=zh_CN.UTF-8")
+                    setBinary(executableFile)
+                }
+            })
     }
 
-    fun init(edgeDriver: File) {
+    fun init(driverFile: File, edgeExecutable: File) {
         check(!init) {
             "please don't call init() again"
         }
-        root = edgeDriver
+        this@WebDriverProducer.driverFile = driverFile
+        this@WebDriverProducer.executableFile = edgeExecutable
 
         init = true
     }

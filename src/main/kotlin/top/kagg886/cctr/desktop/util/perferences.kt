@@ -2,15 +2,24 @@ package top.kagg886.cctr.desktop.util
 
 import androidx.compose.runtime.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import java.util.*
 
-data class Wrapper<T>(
+private data class Wrapper<T>(
     val t: T
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return false
+    }
+
+    override fun hashCode(): Int {
+        return Random().nextInt()
+    }
+}
 
 
 class PreferenceManager<T : Any>(
@@ -18,40 +27,42 @@ class PreferenceManager<T : Any>(
     content: T,
     private val serializer: KSerializer<T>,
 ) {
-    private var t: T = content
+    private val flow = MutableStateFlow(Wrapper(content))
 
-    private val flow = MutableStateFlow(Wrapper(t))
-
-    fun set(block: T.() -> Unit) {
-        t.block()
-        val s = Json.encodeToString(serializer, t)
+    suspend fun set(block: T.() -> Unit) {
+        val current = flow.value.t
+        block(current)
+        val s = Json.encodeToString(serializer, current)
         root_config_file.resolve("$conf.json").apply {
             if (!exists()) {
                 parentFile.mkdirs()
                 createNewFile()
             }
         }.writeText(s)
-        flow.value = Wrapper(t)
+        flow.emit(Wrapper(current))
     }
 
-    suspend fun watch(value: suspend (T?) -> Unit) {
-        flow.collectLatest {
+    suspend fun value() = flow.first().t
+
+    suspend fun collect(value: suspend (T) -> Unit) {
+        flow.collect {
             value(it.t)
         }
     }
 
     @Composable
-    fun watchAsState(): State<T> {
+    fun collectAsState(): State<T> {
         val state by flow.collectAsState()
-        return remember(state) {
+        val s = remember(state) {
             mutableStateOf(state.t)
         }
+        return s
     }
 
-    fun <A> get(block: T.() -> A) = block(t)
+    fun <A> get(block: T.() -> A) = block(flow.value.t)
 
 
-    override fun toString(): String = t.toString()
+    override fun toString(): String = flow.value.toString()
 
     companion object {
         @OptIn(InternalSerializationApi::class)

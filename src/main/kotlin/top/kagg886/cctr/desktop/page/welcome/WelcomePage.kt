@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.RouteBuilder
 import moe.tlaster.precompose.viewmodel.viewModel
 import top.kagg886.cctr.desktop.LocalNavigation
@@ -24,7 +25,7 @@ fun WelcomePage() {
     LaunchedEffect(Unit) {
         show = false
     }
-    val edgeConfig by edge_config.watchAsState()
+    val edgeConfig by edge_config.collectAsState()
 
     val viewModel = viewModel(keys = listOf(edgeConfig.version)) {
         WelcomeViewModel().apply {
@@ -33,7 +34,7 @@ fun WelcomePage() {
     }
     val _state by viewModel.state.collectAsState()
 
-    AnimatedContent(_state) { state->
+    AnimatedContent(_state) { state ->
         when (state) {
             WelcomeViewModelState.Default -> {}
 
@@ -50,19 +51,39 @@ fun WelcomePage() {
             is WelcomeViewModelState.LoadingFailure -> {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.weight(0.3f))
-                    Column(modifier = Modifier.weight(1f).fillMaxWidth(0.8f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth(0.8f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text("请配置Microsoft Edge Driver", fontSize = 40.sp)
                         state.cause?.let {
                             Text(it, color = Color.Red)
                         }
                         var msg by remember {
-                            mutableStateOf("")
+                            mutableStateOf(edgeConfig.version)
                         }
                         OutlinedTextField(
                             value = msg,
                             onValueChange = { msg = it },
                             label = {
                                 Text("请在这里输入Edge版本")
+                            },
+                            placeholder = {
+                                Text("1.0.0")
+                            }
+                        )
+                        val scope = rememberCoroutineScope()
+                        OutlinedTextField(
+                            value = edgeConfig.binary,
+                            onValueChange = {
+                                scope.launch {
+                                    edge_config.set {
+                                        binary = it
+                                    }
+                                }
+                            },
+                            label = {
+                                Text("请在这里输入Edge可执行文件路径")
                             },
                             placeholder = {
                                 Text("1.0.0")

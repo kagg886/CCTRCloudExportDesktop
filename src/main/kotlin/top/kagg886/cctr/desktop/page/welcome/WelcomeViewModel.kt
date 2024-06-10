@@ -12,11 +12,12 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import top.kagg886.cctr.backend.dao.database
+import org.openqa.selenium.SessionNotCreatedException
 import top.kagg886.cctr.desktop.util.*
 import top.kagg886.cctr.driver.WebDriverDispatcher
 import top.kagg886.cctr.util.unzip
 import top.kagg886.cctr.util.useTempFileSuspend
+import java.io.File
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
 
@@ -41,14 +42,25 @@ class WelcomeViewModel : BaseViewModel<WelcomeViewModelState, WelcomeViewModelAc
                     log.info("init edge driver...")
                     //Microsoft Edge WebDriver 125.0.2535.85 (xxx)
                     withContext(Dispatchers.IO) {
-                        WebDriverDispatcher.init {
-                            file = getEdgeDriverFile(action.config.version).resolve(msedgedriverName)
-                            driverPoolSize = action.config.pool
+                        if (!WebDriverDispatcher.inited) {
+                            WebDriverDispatcher.init {
+                                driverFile = getEdgeDriverFile(action.config.version).resolve(msedgedriverName).apply {
+                                    log.info("edge-driver-file: $this")
+                                }
+                                driverPoolSize = action.config.pool
+                                executableFile = File(action.config.binary)
+                            }
+                        } else {
+                            log.warn("edge driver already inited")
                         }
                     }
                 }.onFailure {
                     log.warn("init edge driver failed:",it)
-                    setState(WelcomeViewModelState.LoadingFailure("驱动版本不兼容，请重新填写版本！"))
+                    if (it is SessionNotCreatedException) {
+                        setState(WelcomeViewModelState.LoadingFailure("驱动加载失败！更多信息请查看日志"))
+                        return
+                    }
+                    setState(WelcomeViewModelState.LoadingFailure("未知错误"))
                 }.onSuccess {
                     log.info("init edge driver success")
                     setState(WelcomeViewModelState.LoadingSuccess)
@@ -61,6 +73,7 @@ class WelcomeViewModel : BaseViewModel<WelcomeViewModelState, WelcomeViewModelAc
                 setState(loading)
 
                 val url = getEdgeDownloadURL(action.edgeVersion)
+                log.info("downloading: $url")
                 HttpClient {
                     install(HttpTimeout) {
                         requestTimeoutMillis = 15.minutes.toLong(DurationUnit.MILLISECONDS)
@@ -97,8 +110,6 @@ class WelcomeViewModel : BaseViewModel<WelcomeViewModelState, WelcomeViewModelAc
                                 log.info("url $url download success, unzipping...")
                                 loading.text.value = "Downloading... success!, unzipping..."
                                 cancelFile.unzip(out = getEdgeDriverFile(action.edgeVersion))
-
-                                setState(WelcomeViewModelState.LoadingSuccess)
                                 edge_config.set {
                                     this.version = action.edgeVersion
                                 }

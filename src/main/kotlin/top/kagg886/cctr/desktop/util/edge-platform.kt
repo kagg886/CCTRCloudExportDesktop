@@ -1,13 +1,24 @@
 package top.kagg886.cctr.desktop.util
 
 import java.io.File
+import java.lang.UnsupportedOperationException
 
 
 enum class Platform {
     WINDOWS, LINUX
 }
 
-val os = Platform.valueOf(System.getProperty("os.name").uppercase())
+val os by lazy {
+    with(System.getProperty("os.name").lowercase()) {
+        if (this.contains("windows")) {
+            return@with Platform.WINDOWS
+        }
+        if (this.contains("linux")) {
+            return@with Platform.LINUX
+        }
+        throw UnsupportedOperationException("$this is not supported")
+    }
+}
 
 fun getEdgeDownloadURL(version: String): String {
     val platformStr = when (os) {

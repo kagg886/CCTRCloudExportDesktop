@@ -7,8 +7,9 @@ import org.openqa.selenium.edge.EdgeDriver
 import java.io.File
 
 class DispatcherConfig {
+    var driverFile: File? = null
     var driverPoolSize = 10
-    var file: File? = null
+    var executableFile: File? = null
 }
 
 private val log = KtorSimpleLogger("WebDriverDispatcher")
@@ -17,9 +18,14 @@ object WebDriverDispatcher {
     private lateinit var queue:Channel<EdgeDriver>
     private val list = mutableListOf<EdgeDriver>()
 
-    suspend fun init(conf: DispatcherConfig.() -> Unit) {
+    val inited:Boolean
+        get() = WebDriverProducer.init
+
+    suspend fun init(conf: DispatcherConfig.()->Unit) {
+        log.info("prepare init web-driver-dispatcher...")
         val config = DispatcherConfig().apply(conf)
-        WebDriverProducer.init(config.file!!)
+        WebDriverProducer.init(config.driverFile!!,config.executableFile!!)
+        log.info("init web-driver-dispatcher success, now creating event-loop...")
         queue = Channel(capacity = config.driverPoolSize);
         for (i in 1..config.driverPoolSize) {
             WebDriverProducer.newHeadlessDriver().apply {
@@ -27,6 +33,7 @@ object WebDriverDispatcher {
                 queue.send(this)
             }
         }
+        log.info("creating event-loop success")
         Runtime.getRuntime().addShutdownHook(Thread {
             runBlocking(Dispatchers.IO) {
                 list.map {
