@@ -26,7 +26,7 @@ jobs:
         name: exe
         path: build/compose/binaries/main-release/exe/*.exe
   build-linux:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
