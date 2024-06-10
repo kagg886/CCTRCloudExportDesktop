@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ "master" ]
 jobs:
-  packExe:
+  build-windows:
     runs-on: windows-latest
     permissions:
       contents: read
@@ -25,3 +25,23 @@ jobs:
       with:
         name: exe
         path: build/compose/binaries/main-release/exe/*.exe
+  build-linux:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      - name: Build with Gradle Wrapper
+        run: ./gradlew packageReleaseAppImage
+      - name: Upload math result for job 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: exe
+          path: build/compose/binaries/main-release/app
