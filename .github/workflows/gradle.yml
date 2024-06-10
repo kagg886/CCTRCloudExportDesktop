@@ -23,7 +23,7 @@ jobs:
     - name: Upload math result for job 1
       uses: actions/upload-artifact@v4
       with:
-        name: exe
+        name: windows-exe
         path: build/compose/binaries/main-release/exe/*.exe
   build-linux:
     runs-on: ubuntu-latest
@@ -43,5 +43,5 @@ jobs:
       - name: Upload math result for job 1
         uses: actions/upload-artifact@v4
         with:
-          name: exe
+          name: linux-app
           path: build/compose/binaries/main-release/app
