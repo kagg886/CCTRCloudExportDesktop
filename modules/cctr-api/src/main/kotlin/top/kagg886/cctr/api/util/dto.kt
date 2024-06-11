@@ -32,7 +32,6 @@ data class BaseResponse(
         return kotlin.runCatching {
             json.decodeFromJsonElement<T>(dataOrigin?:throw RuntimeException())
         }.getOrElse {
-            it.printStackTrace()
             KtorSimpleLogger("dto").warn("convert data failed:",it)
             null
         }
