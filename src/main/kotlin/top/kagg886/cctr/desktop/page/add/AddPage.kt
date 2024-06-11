@@ -61,9 +61,9 @@ fun AddPage(goBack: () -> Unit) {
                             }
                         }
                         Column(modifier = Modifier.fillMaxWidth(0.8f),horizontalAlignment = Alignment.CenterHorizontally) {
-                            var schoolId by remember { mutableStateOf("U101441") }
-                            var userName by remember { mutableStateOf("2203050528") }
-                            var password by remember { mutableStateOf("123123qweqwe") }
+                            var schoolId by remember { mutableStateOf("") }
+                            var userName by remember { mutableStateOf("") }
+                            var password by remember { mutableStateOf("") }
                             Spacer(modifier = Modifier.weight(1f))
                             OutlinedTextField(
                                 value = schoolId,
