@@ -15,6 +15,9 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
     override fun initState(): ChooseConfigViewModelState = ChooseConfigViewModelState.Default
 
     override suspend fun onAction(state: ChooseConfigViewModelState, action: ChooseConfigViewModelAction) {
+        if (state is ChooseConfigViewModelState.LoadSuccess) {
+            setState(state.copy(loading = true))
+        }
         when (action) {
             is ChooseConfigViewModelAction.LoadALLPracticeForString -> {
                 val practiceList = action.user.getUserPracticeList()
@@ -46,7 +49,7 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                 }
 
 
-                val newVal = s.copy(config = newConfig)
+                val newVal = s.copy(loading = false, config = newConfig)
                 setState(
                     newVal
                 )
@@ -58,17 +61,24 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                 with(action.target) {
                     newConfig[this] = mapOf()
                 }
-                val newVal = s.copy(config = newConfig)
+                val newVal = s.copy(loading = false, config = newConfig)
                 setState(
                     newVal
                 )
+            }
+
+            ChooseConfigViewModelAction.SetAllPractice -> {
+
+                (state as ChooseConfigViewModelState.LoadSuccess).config.forEach {
+                    onAction(this.state.value,ChooseConfigViewModelAction.SetAllByPractice(it.key))
+                }
             }
 
             is ChooseConfigViewModelAction.SelectPractice -> {
                 (state as ChooseConfigViewModelState.LoadSuccess)
                 val (cType,_) = state.user.getQuestionType(action.practice)
                 setState(
-                    state.copy(
+                    state.copy(loading = false, 
                         currentPractice = action.practice,
                         currentChapterList = buildMap { 
                             for (i in cType) {
@@ -88,7 +98,7 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                     }
                 }
                 setState(
-                    state.copy(
+                    state.copy(loading = false, 
                         config = newVal
                     )
                 )
@@ -109,7 +119,7 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                 }
 
                 setState(
-                    state.copy(
+                    state.copy(loading = false, 
                         config = newConfig
                     )
                 )
@@ -118,7 +128,7 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                 (state as ChooseConfigViewModelState.LoadSuccess)
                 val (_,qType) = state.user.getQuestionType(state.currentPractice!!)
                 setState(
-                    state.copy(
+                    state.copy(loading = false, 
                         currentChapterType = action.target,
                         questionList = qType.toList()
                     )
@@ -146,14 +156,14 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
                     newConfig[state.currentPractice] = mapOf()
                 }
                 setState(
-                    state.copy(
+                    state.copy(loading = false, 
                         config = newConfig
                     )
                 )
             }
             is ChooseConfigViewModelAction.SelectQuestionType -> {
                 (state as ChooseConfigViewModelState.LoadSuccess)
-                setState(state.copy(
+                setState(state.copy(loading = false, 
                     config = state.config.toMutableMap().apply {
                         this[state.currentPractice!!] = this[state.currentPractice]!!.toMutableMap().apply {
                             this[state.currentChapterType!!] = (this[state.currentChapterType]?.toMutableList() ?: mutableListOf()).apply {
@@ -170,12 +180,12 @@ class ChooseConfigViewModel : BaseViewModel<ChooseConfigViewModelState, ChooseCo
 sealed interface ChooseConfigViewModelState : BaseState {
     data object Default: ChooseConfigViewModelState
     data class LoadSuccess(
+        val loading: Boolean = false,
         val user: CCTRUser,
         val config:Map<Practice,Map<ChapterType,List<QuestionType>>>,
         val currentPractice: Practice?,
         val currentChapterList:Map<ChapterType,List<QuestionType>>?,
         val currentChapterType: ChapterType?,
-
         val questionList: List<QuestionType>?
     ): ChooseConfigViewModelState
 }
@@ -186,6 +196,8 @@ sealed interface ChooseConfigViewModelAction : BaseAction {
     data class SetAllByPractice(val target:Practice): ChooseConfigViewModelAction
     data class DeSetAllByPractice(val target:Practice): ChooseConfigViewModelAction
     data class SelectPractice(val practice: Practice):ChooseConfigViewModelAction
+
+    data object SetAllPractice:ChooseConfigViewModelAction
 
 
     data class SetAllByChapterType(val target:ChapterType): ChooseConfigViewModelAction

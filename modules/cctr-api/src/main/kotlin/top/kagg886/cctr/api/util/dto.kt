@@ -30,8 +30,9 @@ data class BaseResponse(
 ) {
     inline fun <reified T> data(): T? {
         return kotlin.runCatching {
-            json.decodeFromJsonElement<T>(dataOrigin!!)
+            json.decodeFromJsonElement<T>(dataOrigin?:throw RuntimeException())
         }.getOrElse {
+            it.printStackTrace()
             KtorSimpleLogger("dto").warn("convert data failed:",it)
             null
         }

@@ -59,7 +59,7 @@ data class Question(
     internal val subjecthtml_svg: String,
     internal val answerhtml_svg: String,
     @SerialName("answer")
-    internal val answer_origin: String,
+    internal val answer_origin: String?,
 
     @SerialName("options")
     internal val options_origin: JsonElement,
@@ -79,7 +79,7 @@ data class Question(
     }
 
     val answer by lazy {
-        if (answerhtml_svg.isEmpty()) answer_origin else answerhtml_svg.toByteArray().decompress().decodeToString()
+        if (answerhtml_svg.isEmpty()) answer_origin!! else answerhtml_svg.toByteArray().decompress().decodeToString()
     }
 }
 

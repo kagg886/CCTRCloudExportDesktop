@@ -3,17 +3,12 @@ package top.kagg886.cctr.desktop.page.add
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Checkbox
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ListItem
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -21,6 +16,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import moe.tlaster.precompose.viewmodel.viewModel
 import top.kagg886.cctr.api.CCTRUser
 import top.kagg886.cctr.api.modules.ChapterType
@@ -47,10 +43,34 @@ fun ChooseConfig(user:CCTRUser,config:MutableState<Map<Practice,Map<ChapterType,
         when(state) {
             ChooseConfigViewModelState.Default -> {}
             is ChooseConfigViewModelState.LoadSuccess -> {
+                if (state.loading) {
+                    Dialog(onDismissRequest = {}) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
                 val config = state.config
                 Row(Modifier.fillMaxSize().padding(top = 50.dp)) {
                     Column(Modifier.weight(1f)) {
                         LazyColumn {
+                            item {
+                                Row {
+                                    TextButton(onClick = {
+                                        model.dispatch(ChooseConfigViewModelAction.SetAllPractice)
+                                    }){
+                                        Text("全选")
+                                    }
+
+                                    TextButton(onClick = {
+                                        config.keys.forEach {
+                                            model.dispatch(ChooseConfigViewModelAction.DeSetAllByPractice(it))
+                                        }
+                                    }) {
+                                        Text("反选")
+                                    }
+                                }
+                            }
                             items(config.keys.toList()) { practice->
                                 ListItem(
                                     icon = {
