@@ -7,7 +7,7 @@ import com.itextpdf.layout.Document
 import com.itextpdf.layout.element.Image
 import java.io.File
 
-val root_file = File(System.getProperty("user.home")).apply {
+val root_file = File(System.getProperty("user.home")).resolve("cctr-desktop").apply {
     if (!exists()) {
         parentFile.mkdirs()
     }
