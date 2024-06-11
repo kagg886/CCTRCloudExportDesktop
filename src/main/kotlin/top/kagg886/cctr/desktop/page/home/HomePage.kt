@@ -31,6 +31,7 @@ import top.kagg886.cctr.desktop.LocalNavigation
 import top.kagg886.cctr.desktop.LocalNavigationShower
 import top.kagg886.cctr.desktop.LocalSnackBar
 import top.kagg886.cctr.desktop.page.add.ADD_ROUTE
+import top.kagg886.cctr.desktop.page.log.LOG_ROUTE
 import kotlin.math.max
 import kotlin.math.min
 
@@ -59,8 +60,6 @@ fun HomePage() {
             }
         }
         is HomeViewModelState.LoadingSuccess -> {
-            val state = state as HomeViewModelState.LoadingSuccess
-
             val snack = LocalSnackBar.current
             val scope = rememberCoroutineScope()
             LaunchedEffect(state) {
@@ -68,14 +67,15 @@ fun HomePage() {
                     snack.showSnackbar("加载成功!")
                 }
             }
+            val state = state as HomeViewModelState.LoadingSuccess
 
             Box(Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
-                    GridCells.Fixed(8),
+                    GridCells.Fixed(9),
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    items(listOf("任务id","学校代号","用户名","密码","配置文件","任务状态","导出模式","创建时间")) {
+                    items(listOf("任务id","学校代号","用户名","密码","配置文件","任务状态","导出模式","创建时间","操作")) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(it,fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Divider()
@@ -128,6 +128,16 @@ fun HomePage() {
                         item {
                             Text(i.createTime.toString(), textAlign = TextAlign.Center)
                         }
+                        item {
+                            Row {
+                                val nav = LocalNavigation.current
+                                TextButton(onClick = {
+                                    nav.navigate("log/${i.id}")
+                                }) {
+                                    Text("查看日志")
+                                }
+                            }
+                        }
                     }
                 }
                 var expand by remember { mutableStateOf(false) }
@@ -159,7 +169,6 @@ fun HomePage() {
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight,"right")
                             }
                         }
-
                     }
                 }
 

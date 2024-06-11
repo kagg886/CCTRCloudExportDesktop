@@ -53,10 +53,9 @@ class PreferenceManager<T : Any>(
     @Composable
     fun collectAsState(): State<T> {
         val state by flow.collectAsState()
-        val s = remember(state) {
+        return remember(state) {
             mutableStateOf(state.t)
         }
-        return s
     }
 
     fun <A> get(block: T.() -> A) = block(flow.value.t)

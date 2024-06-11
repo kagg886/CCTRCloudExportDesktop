@@ -118,7 +118,7 @@ object TaskManager {
                     }
                 }.awaitAll()
             }
-            val all = questions.flatMap { it.value.flatMap { it1 -> it1.value } }.size
+            val all = questions.filter { it.value!=null }.flatMap { it.value.filter { it.value != null }.flatMap { it1 -> it1.value } }.size
             task.info("查询需要导出的题目成功，共${all}个")
             val progressChannel = Channel<Int>()
             var progress = 0

@@ -5,16 +5,24 @@
         </encoder>
     </appender>
 
-    <appender name="FILE_LATEST" class="ch.qos.logback.core.FileAppender">
-        <file>cctr-desktop/log/latest.log</file>
+<!--    <appender name="FILE_LATEST" class="ch.qos.logback.core.FileAppender">-->
+<!--        <file>${log.path}latest.log</file>-->
+<!--        <encoder>-->
+<!--            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+
+    <!--    根据日期输出日志-->
+    <appender name="FILE_TIME" class="top.kagg886.cctr.desktop.util.DateFileAppender">
+        <file>latest.log</file>
         <encoder>
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!--    根据日期输出日志-->
-    <appender name="FILE_TIME" class="top.kagg886.cctr.desktop.util.CustomFileAppender">
-        <file>cctr-desktop/log</file>
+    <!--    输出最新日志-->
+    <appender name="FILE_LATEST" class="top.kagg886.cctr.desktop.util.LatestFileAppender">
+        <file>latest.log</file>
         <encoder>
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>

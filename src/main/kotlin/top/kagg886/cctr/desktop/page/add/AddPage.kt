@@ -30,6 +30,7 @@ import top.kagg886.cctr.desktop.LocalNavigation
 import top.kagg886.cctr.desktop.LocalNavigationShower
 import top.kagg886.cctr.desktop.LocalSnackBar
 import top.kagg886.cctr.desktop.page.home.HOME_ROUTE
+import top.kagg886.cctr.desktop.util.cctr_last_modifier
 import java.time.LocalDateTime
 
 @Composable
@@ -61,9 +62,18 @@ fun AddPage(goBack: () -> Unit) {
                             }
                         }
                         Column(modifier = Modifier.fillMaxWidth(0.8f),horizontalAlignment = Alignment.CenterHorizontally) {
-                            var schoolId by remember { mutableStateOf("") }
-                            var userName by remember { mutableStateOf("") }
-                            var password by remember { mutableStateOf("") }
+                            val cctr = cctr_last_modifier.collectAsState().value
+                            var schoolId by remember(cctr) { mutableStateOf(cctr.schoolId) }
+                            var userName by remember(cctr) { mutableStateOf(cctr.userName) }
+                            var password by remember(cctr) { mutableStateOf(cctr.password) }
+
+                            LaunchedEffect(schoolId,userName,password) {
+                                cctr_last_modifier.set {
+                                    this.schoolId = schoolId
+                                    this.userName = userName
+                                    this.password = password
+                                }
+                            }
                             Spacer(modifier = Modifier.weight(1f))
                             OutlinedTextField(
                                 value = schoolId,
@@ -82,7 +92,7 @@ fun AddPage(goBack: () -> Unit) {
                             )
                             Spacer(Modifier.weight(1f))
                             FloatingActionButton(onClick = {
-                                model.dispatch(AddViewModelAction.LoginToCCTR(schoolId,userName, password))
+                                model.dispatch(AddViewModelAction.LoginToCCTR)
                             }){
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "")
                             }
@@ -154,11 +164,12 @@ fun AddPage(goBack: () -> Unit) {
                             val snack = LocalSnackBar.current
                             FloatingActionButton(onClick = {
                                 scope.launch {
+                                    val config = cctr_last_modifier.value()
                                     val task = TaskManager.commitTask(Task(
                                         id = -1,
-                                        schoolId = state.client.schoolId,
-                                        username = state.client.userName,
-                                        password = state.client.passWord,
+                                        schoolId = config.schoolId,
+                                        username = config.userName,
+                                        password = config.password,
                                         status = Tasks.TaskStatus.WAITING,
                                         exportType = selectedOption,
                                         createTime = LocalDateTime.now(),

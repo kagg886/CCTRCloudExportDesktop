@@ -1,5 +1,6 @@
 package top.kagg886.cctr.api.util
 
+import io.ktor.util.logging.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -20,7 +21,6 @@ fun buildURLParams(vararg params: Pair<String, Any>): String {
     }
     return s.substring(0, s.length - 1)
 }
-
 @Serializable
 data class BaseResponse(
     val code: Int,
@@ -32,6 +32,7 @@ data class BaseResponse(
         return kotlin.runCatching {
             json.decodeFromJsonElement<T>(dataOrigin!!)
         }.getOrElse {
+            KtorSimpleLogger("dto").warn("convert data failed:",it)
             null
         }
     }

@@ -21,6 +21,7 @@ import top.kagg886.cctr.backend.task.TaskManager
 import top.kagg886.cctr.desktop.component.Navigation
 import top.kagg886.cctr.desktop.page.add.configureAddPage
 import top.kagg886.cctr.desktop.page.home.configureHomePage
+import top.kagg886.cctr.desktop.page.log.configureLogPage
 import top.kagg886.cctr.desktop.page.welcome.WELCOME_ROUTE
 import top.kagg886.cctr.desktop.page.welcome.configureWelcomePage
 import top.kagg886.cctr.desktop.util.root_file
@@ -32,6 +33,7 @@ val LocalSnackBar = compositionLocalOf<SnackbarHostState> { error("LocalSnackBar
 val LocalTray = compositionLocalOf<TrayState> { error("LocalTray not provided") }
 private var log = KtorSimpleLogger("log")
 fun main() {
+    System.setProperty("log.path", "$root_file/log")
     log.info("Application started, user-home is:${System.getProperty("user.home")}")
 
     TaskManager.start()
@@ -102,6 +104,7 @@ fun App() {
                 configureWelcomePage()
                 configureHomePage()
                 configureAddPage()
+                configureLogPage()
             }
         }
     }

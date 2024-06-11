@@ -10,6 +10,7 @@ import top.kagg886.cctr.desktop.LocalNavigation
 import top.kagg886.cctr.desktop.util.BaseAction
 import top.kagg886.cctr.desktop.util.BaseState
 import top.kagg886.cctr.desktop.util.BaseViewModel
+import top.kagg886.cctr.desktop.util.cctr_last_modifier
 
 
 private val log = KtorSimpleLogger("AddViewModel")
@@ -19,14 +20,15 @@ class AddViewModel : BaseViewModel<AddViewModelState, AddViewModelAction>() {
 
     override suspend fun onAction(state: AddViewModelState, action: AddViewModelAction) {
         when (action) {
-            is AddViewModelAction.LoginToCCTR -> {
+            AddViewModelAction.LoginToCCTR -> {
                 setState(AddViewModelState.Loading)
-                log.info("start to login CCTR: ${action.schoolId}---${action.userName}")
+                val login = cctr_last_modifier.value()
+                log.info("start to login CCTR: $login")
                 kotlin.runCatching {
                     CCTRUser.newCCTRUser {
-                        schoolId = action.schoolId
-                        username = action.userName
-                        password = action.password
+                        schoolId = login.schoolId
+                        username = login.userName
+                        password = login.password
                     }
                 }.onFailure {
                     setState(AddViewModelState.LoginToCCTR(it.message!!))
@@ -37,7 +39,7 @@ class AddViewModel : BaseViewModel<AddViewModelState, AddViewModelAction>() {
             }
 
             is AddViewModelAction.SendConfig -> {
-                setState(AddViewModelState.SelectExportType(action.user,action.config))
+                setState(AddViewModelState.SelectExportType(action.config))
             }
         }
     }
@@ -48,10 +50,10 @@ sealed interface AddViewModelState : BaseState {
     data object Loading : AddViewModelState
     data class LoginToCCTR(val msg: String = "") : AddViewModelState
     data class WaitChoose(val client: CCTRUser) : AddViewModelState
-    data class SelectExportType(val client: CCTRUser,val config: Map<Practice, Map<ChapterType, List<QuestionType>>>) : AddViewModelState
+    data class SelectExportType(val config: Map<Practice, Map<ChapterType, List<QuestionType>>>) : AddViewModelState
 }
 
 sealed interface AddViewModelAction : BaseAction {
-    data class LoginToCCTR(val schoolId: String, val userName: String, val password: String) : AddViewModelAction
+    data object LoginToCCTR : AddViewModelAction
     data class SendConfig(val user: CCTRUser,val config: Map<Practice, Map<ChapterType, List<QuestionType>>>) : AddViewModelAction
 }
