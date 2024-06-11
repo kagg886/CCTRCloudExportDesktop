@@ -11,6 +11,7 @@ import top.kagg886.cctr.backend.dao.Tasks.ExportType.*
 import top.kagg886.cctr.backend.util.error
 import top.kagg886.cctr.backend.util.info
 import top.kagg886.cctr.desktop.util.convertToPDF
+import top.kagg886.cctr.desktop.util.root_file
 import top.kagg886.cctr.driver.WebDriverDispatcher
 import top.kagg886.cctr.driver.captchaImage
 import top.kagg886.cctr.util.mergeVertical
@@ -192,7 +193,7 @@ object TaskManager {
                                 }
                             }
                             tmp.zip(
-                                out = File("cctr-desktop").resolve("out").resolve("task_" + task.id.toString() + ".zip")
+                                out = root_file.resolve("out").resolve("task_" + task.id.toString() + ".zip")
                                     .apply {
                                         if (exists()) {
                                             delete()
@@ -206,7 +207,7 @@ object TaskManager {
 
                     IMG -> {
                         root.zip(
-                            out = File("cctr-desktop").resolve("out").resolve("task_" + task.id.toString() + ".zip")
+                            out = root_file.resolve("out").resolve("task_" + task.id.toString() + ".zip")
                                 .apply {
                                     if (exists()) {
                                         delete()
