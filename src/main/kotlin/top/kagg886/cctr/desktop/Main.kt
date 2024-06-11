@@ -8,11 +8,14 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.window.*
 import io.ktor.util.logging.*
+import kotlinx.coroutines.delay
 import moe.tlaster.precompose.PreComposeApp
 import moe.tlaster.precompose.navigation.NavHost
 import moe.tlaster.precompose.navigation.Navigator
@@ -27,7 +30,7 @@ import top.kagg886.cctr.desktop.page.welcome.configureWelcomePage
 val LocalNavigationShower = compositionLocalOf<MutableState<Boolean>> { error("LocalNavigationShower not provided") }
 val LocalNavigation = compositionLocalOf<Navigator> { error("LocalNavigation not provided") }
 val LocalSnackBar = compositionLocalOf<SnackbarHostState> { error("LocalSnackBar not provided") }
-
+val LocalTray = compositionLocalOf<TrayState> { error("LocalTray not provided") }
 private var log = KtorSimpleLogger("log")
 fun main() {
     log.info("Application started")
@@ -43,9 +46,21 @@ fun main() {
                     LocalNavigation provides rememberNavigator(),
                     LocalSnackBar provides remember {
                         SnackbarHostState()
-                    }
+                    },
+                    LocalTray provides rememberTrayState()
                 ) {
                     MaterialTheme {
+                        Tray(
+                            icon = painterResource("a.png"),
+                            state = LocalTray.current
+                        ) {
+                            Item(
+                                "退出程序",
+                                onClick = {
+                                    exitApplication()
+                                }
+                            )
+                        }
                         App()
                     }
                 }

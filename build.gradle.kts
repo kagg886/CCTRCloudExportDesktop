@@ -23,11 +23,11 @@ dependencies {
     // compose.desktop.currentOs should be used in launcher-sourceSet
     // (in a separate module for demo project and in testMain).
     // With compose.desktop.common you will also lose @Preview functionality
-    implementation(compose.desktop.linux_x64)
-    implementation(compose.desktop.windows_x64)
+    implementation(compose.desktop.currentOs)
     implementation("ch.qos.logback:logback-classic:1.4.14")
 
     testImplementation(kotlin("test"))
+    implementation("com.itextpdf:itext7-core:8.0.4")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("moe.tlaster:precompose:1.6.0")
@@ -40,7 +40,6 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
 
     implementation("org.xerial:sqlite-jdbc:3.45.3.0")
-
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")

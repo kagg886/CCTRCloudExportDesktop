@@ -52,6 +52,10 @@ class QueryModel {
 data class Question(
     @SerialName("questionid")
     val id: String,
+
+    @SerialName("questiontypename")
+    val questionType: String,
+
     internal val subjecthtml_svg: String,
     internal val answerhtml_svg: String,
     @SerialName("answer")

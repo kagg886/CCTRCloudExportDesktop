@@ -10,9 +10,11 @@ import top.kagg886.cctr.backend.dao.Tasks
 import top.kagg886.cctr.backend.dao.Tasks.ExportType.*
 import top.kagg886.cctr.backend.util.error
 import top.kagg886.cctr.backend.util.info
+import top.kagg886.cctr.desktop.util.convertToPDF
 import top.kagg886.cctr.driver.WebDriverDispatcher
 import top.kagg886.cctr.driver.captchaImage
 import top.kagg886.cctr.util.mergeVertical
+import top.kagg886.cctr.util.useTempDictionary
 import top.kagg886.cctr.util.useTempDictionarySuspend
 import top.kagg886.cctr.util.zip
 import java.awt.image.BufferedImage
@@ -128,7 +130,7 @@ object TaskManager {
                         progressChannel.receive()
                         progress++
                         val k = percentArr.indexOf(progress) + 1
-                        if (k == 0){
+                        if (k == 0) {
                             continue
                         }
                         task.info("进度:${k}0%")
@@ -156,7 +158,8 @@ object TaskManager {
                                         }
                                         val img = i2.mergeVertical()
                                         val file =
-                                            root.resolve(pr.practiceName).resolve(cType.name).resolve(it.id + ".png")
+                                            root.resolve(pr.practiceName).resolve(cType.name).resolve(it.questionType)
+                                                .resolve(it.id + ".png")
                                                 .apply {
                                                     if (!exists()) {
                                                         parentFile.mkdirs()
@@ -174,8 +177,31 @@ object TaskManager {
 
                 when (task.exportType) {
                     PDF -> {
-                        task.error("暂不支持，请等待更新")
-                        throw RuntimeException()
+                        //root/练习名/章节名/题型名/图片
+                        useTempDictionary { tmp ->
+                            for (prFile in root.listFiles()!!) { //练习名
+                                for (cpFile in prFile.listFiles()!!) { //章节名
+                                    for (qFile in cpFile.listFiles()!!) { //题型名
+                                        qFile.listFiles()!!.toList().convertToPDF(
+                                            tmp.resolve(prFile.name).resolve(cpFile.name).resolve(qFile.name + ".pdf").apply {
+                                                parentFile.mkdirs()
+                                                createNewFile()
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            tmp.zip(
+                                out = File("cctr-desktop").resolve("out").resolve("task_" + task.id.toString() + ".zip")
+                                    .apply {
+                                        if (exists()) {
+                                            delete()
+                                        }
+                                        parentFile.mkdirs()
+                                        createNewFile()
+                                    }
+                            )
+                        }
                     }
 
                     IMG -> {

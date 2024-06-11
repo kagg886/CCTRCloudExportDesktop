@@ -2,8 +2,8 @@ package top.kagg886.cctr.desktop.page.home
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -12,7 +12,9 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.RouteBuilder
 import moe.tlaster.precompose.viewmodel.viewModel
@@ -92,7 +95,29 @@ fun HomePage() {
                             Text(i.password, textAlign = TextAlign.Center)
                         }
                         item {
-                            Text(i.config.toString(), textAlign = TextAlign.Center)
+                            var dialog by remember {
+                                mutableStateOf(false)
+                            }
+                            if (dialog) {
+                                Dialog(onDismissRequest = {
+                                    dialog = false
+                                }) {
+                                    Surface(
+                                        modifier = Modifier.fillMaxSize(0.7f)
+                                    ) {
+                                        LazyColumn {
+                                            item {
+                                                Text(i.config.toString(), textAlign = TextAlign.Center)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            TextButton(onClick = {
+                                dialog = true
+                            }) {
+                                Text("查看配置")
+                            }
                         }
                         item {
                             Text(i.status.toString(), textAlign = TextAlign.Center)
