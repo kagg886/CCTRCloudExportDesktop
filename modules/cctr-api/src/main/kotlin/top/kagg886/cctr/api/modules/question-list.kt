@@ -89,7 +89,7 @@ data class Option(
     internal val questionoptionhtml_svg: String
 ) {
     val isTrue: Boolean by lazy {
-        istrue == 0
+        istrue == 1
     }
 
     //    fun getOptionsDecode(): List<String> {
