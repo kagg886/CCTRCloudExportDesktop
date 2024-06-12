@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 import kotlin.reflect.jvm.jvmName
 
+private val divider = BufferedImage(10, 50, BufferedImage.TYPE_INT_ARGB)
+
 object TaskManager {
 
     private val dispatcher = CoroutineScope(
@@ -152,11 +154,30 @@ object TaskManager {
 
                                         if (it.hasOptions) {
                                             for (option in it.options) {
-                                                i2.add(driver.captchaImage(option.html))
+                                                if (option.isTrue) {
+                                                    i2.add(driver.captchaImage("""
+                                                        <div style="padding-left: 20px;padding-top: 10px;display: flex;align-items: baseline;color: red">
+                                                            <span>√</span>
+                                                            ${option.html.trim()}
+                                                        </div>
+                                                    """.trimIndent()))
+                                                } else {
+                                                    i2.add(driver.captchaImage("""
+                                                        <div style="padding-left: 20px;padding-top: 10px;">
+                                                            ${option.html}
+                                                        </div>
+                                                    """.trimIndent()))
+                                                }
                                             }
                                         } else {
-                                            i2.add(driver.captchaImage(it.answer))
+                                            i2.add(driver.captchaImage("""
+                                                <div style="padding: 30px">
+                                                    <span>答：</span>
+                                                    ${it.answer}
+                                                </div>
+                                            """.trimIndent()))
                                         }
+                                        i2.add(divider)
                                         val img = i2.mergeVertical()
                                         val file =
                                             root.resolve(pr.practiceName).resolve(cType.name).resolve(it.questionType)

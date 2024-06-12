@@ -104,15 +104,14 @@ data class Option(
 //        return s
 //    }
     val html by lazy {
-        var ans = questionoptionhtml_svg.toByteArray().decompress().decodeToString()
-        if (isTrue) {
-            ans = """
-                <div style="background: red;">
-                    $ans
-                </div>
-            """.trimIndent()
-        }
-        ans
+//        if (isTrue) {
+//            ans = """
+//                <div style="background: red;">
+//                    $ans
+//                </div>
+//            """.trimIndent()
+//        }
+        questionoptionhtml_svg.toByteArray().decompress().decodeToString()
     }
 }
 

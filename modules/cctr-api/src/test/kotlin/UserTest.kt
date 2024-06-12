@@ -36,8 +36,13 @@ class UserTest {
 
         for (i in result) {
             println(i.subjectHtml)
+            println("----------------")
             println(i.answer)
-            println(i.options)
+            println("----------------")
+            println(i.options.forEach {
+                println(it.html)
+            })
+            println("----------------")
             println("----------------")
         }
     }
