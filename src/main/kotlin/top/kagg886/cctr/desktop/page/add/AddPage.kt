@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.RouteBuilder
 import moe.tlaster.precompose.navigation.transition.NavTransition
@@ -175,7 +176,9 @@ fun AddPage(goBack: () -> Unit) {
                                         createTime = LocalDateTime.now(),
                                         config = state.config
                                     ))
-                                    snack.showSnackbar("提交成功!，任务id为：${task.id}")
+                                    launch {
+                                        snack.showSnackbar("提交成功!，任务id为：${task.id}")
+                                    }
                                     navigator.navigate(HOME_ROUTE)
                                 }
 //                                model.dispatch(AddViewModelAction.StartToExport(state.client,state.config,selectedOption))

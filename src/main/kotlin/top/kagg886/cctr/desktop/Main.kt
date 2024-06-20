@@ -5,14 +5,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.*
 import io.ktor.util.logging.*
-import kotlinx.coroutines.delay
 import moe.tlaster.precompose.PreComposeApp
 import moe.tlaster.precompose.navigation.NavHost
 import moe.tlaster.precompose.navigation.Navigator
@@ -25,7 +22,6 @@ import top.kagg886.cctr.desktop.page.log.configureLogPage
 import top.kagg886.cctr.desktop.page.welcome.WELCOME_ROUTE
 import top.kagg886.cctr.desktop.page.welcome.configureWelcomePage
 import top.kagg886.cctr.desktop.util.root_file
-import kotlin.system.exitProcess
 
 val LocalNavigationShower = compositionLocalOf<MutableState<Boolean>> { error("LocalNavigationShower not provided") }
 val LocalNavigation = compositionLocalOf<Navigator> { error("LocalNavigation not provided") }

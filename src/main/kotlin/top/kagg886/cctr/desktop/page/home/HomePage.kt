@@ -18,7 +18,9 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,11 +29,19 @@ import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.RouteBuilder
 import moe.tlaster.precompose.viewmodel.viewModel
+import top.kagg886.cctr.backend.dao.Task
+import top.kagg886.cctr.backend.dao.Tasks
+import top.kagg886.cctr.backend.task.TaskManager
 import top.kagg886.cctr.desktop.LocalNavigation
 import top.kagg886.cctr.desktop.LocalNavigationShower
 import top.kagg886.cctr.desktop.LocalSnackBar
 import top.kagg886.cctr.desktop.page.add.ADD_ROUTE
 import top.kagg886.cctr.desktop.page.log.LOG_ROUTE
+import top.kagg886.cctr.desktop.util.CCTRConfig
+import top.kagg886.cctr.desktop.util.cctr_last_modifier
+import top.kagg886.cctr.desktop.util.root_file
+import java.awt.Desktop
+import java.time.LocalDateTime
 import kotlin.math.max
 import kotlin.math.min
 
@@ -59,6 +69,7 @@ fun HomePage() {
                 }
             }
         }
+
         is HomeViewModelState.LoadingSuccess -> {
             val snack = LocalSnackBar.current
             val scope = rememberCoroutineScope()
@@ -71,13 +82,13 @@ fun HomePage() {
 
             Box(Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
-                    GridCells.Fixed(9),
+                    GridCells.Fixed(8),
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    items(listOf("任务id","学校代号","用户名","密码","配置文件","任务状态","导出模式","创建时间","操作")) {
+                    items(listOf("任务id", "学校代号", "用户名", "密码", "任务状态", "导出模式", "创建时间", "操作")) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(it,fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text(it, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Divider()
                         }
                     }
@@ -95,31 +106,6 @@ fun HomePage() {
                             Text(i.password, textAlign = TextAlign.Center)
                         }
                         item {
-                            var dialog by remember {
-                                mutableStateOf(false)
-                            }
-                            if (dialog) {
-                                Dialog(onDismissRequest = {
-                                    dialog = false
-                                }) {
-                                    Surface(
-                                        modifier = Modifier.fillMaxSize(0.7f)
-                                    ) {
-                                        LazyColumn {
-                                            item {
-                                                Text(i.config.toString(), textAlign = TextAlign.Center)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            TextButton(onClick = {
-                                dialog = true
-                            }) {
-                                Text("查看配置")
-                            }
-                        }
-                        item {
                             Text(i.status.toString(), textAlign = TextAlign.Center)
                         }
                         item {
@@ -129,13 +115,86 @@ fun HomePage() {
                             Text(i.createTime.toString(), textAlign = TextAlign.Center)
                         }
                         item {
-                            Row {
+                            val drop = remember {
+                                DropdownMenuState()
+                            }
+                            DropdownMenu(drop) {
                                 val nav = LocalNavigation.current
-                                TextButton(onClick = {
+                                DropdownMenuItem(onClick = {
                                     nav.navigate("log/${i.id}")
                                 }) {
                                     Text("查看日志")
                                 }
+                                var dialog by remember {
+                                    mutableStateOf(false)
+                                }
+                                if (dialog) {
+                                    Dialog(onDismissRequest = {
+                                        dialog = false
+                                    }) {
+                                        Surface(
+                                            modifier = Modifier.fillMaxSize(0.7f)
+                                        ) {
+                                            LazyColumn {
+                                                item {
+                                                    Text(i.config.toString(), textAlign = TextAlign.Center)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                DropdownMenuItem(onClick = {
+                                    dialog = true
+                                }) {
+                                    Text("查看配置")
+                                }
+                                DropdownMenuItem(onClick = {
+                                    val f = root_file.resolve("out").resolve("task_" + i.id.toString() + ".zip")
+                                    if (f.exists().not()) {
+                                        scope.launch {
+                                            snack.showSnackbar("文件不存在。可能是文件正在导出，或文件已删除")
+                                        }
+                                        return@DropdownMenuItem
+                                    }
+                                    Desktop.getDesktop().open(f);
+                                }) {
+                                    Text("打开文件")
+                                }
+
+                                DropdownMenuItem(onClick = {
+                                    scope.launch {
+                                        val config = CCTRConfig(i.schoolId, i.username, i.password)
+                                        val task = TaskManager.commitTask(
+                                            Task(
+                                                id = -1,
+                                                schoolId = config.schoolId,
+                                                username = config.userName,
+                                                password = config.password,
+                                                status = Tasks.TaskStatus.WAITING,
+                                                exportType = i.exportType,
+                                                createTime = LocalDateTime.now(),
+                                                config = i.config
+                                            )
+                                        )
+                                        launch {
+                                            snack.showSnackbar("提交成功!，任务id为：${task.id}")
+                                        }
+                                        nav.navigate(HOME_ROUTE)
+                                    }
+                                }) {
+                                    Text("重试")
+                                }
+                            }
+                            var offset by remember {
+                                mutableStateOf<Offset?>(null)
+                            }
+                            TextButton(onClick = {
+                                drop.status = DropdownMenuState.Status.Open(offset!!)
+                            }, modifier = Modifier.onGloballyPositioned {
+                                offset = it.localToWindow(Offset.Zero)
+                            }) {
+                                Text("打开菜单")
                             }
                         }
                     }
@@ -155,24 +214,31 @@ fun HomePage() {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(
                                 onClick = {
-                                    model.dispatch(HomeViewModelAction.LoadingData(max(1,state.pageIndex-1)))
+                                    model.dispatch(HomeViewModelAction.LoadingData(max(1, state.pageIndex - 1)))
                                 }
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft,"left")
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "left")
                             }
-                            Text("第${state.pageIndex}页，共${pageCount}页", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
+                            Text(
+                                "第${state.pageIndex}页，共${pageCount}页",
+                                fontSize = 20.sp,
+                                modifier = Modifier.padding(8.dp)
+                            )
                             IconButton(
                                 onClick = {
-                                    model.dispatch(HomeViewModelAction.LoadingData(min(pageCount,state.pageIndex+1)))
+                                    model.dispatch(HomeViewModelAction.LoadingData(min(pageCount, state.pageIndex + 1)))
                                 }
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight,"right")
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "right")
                             }
                         }
                     }
                 }
 
-                Column(modifier = Modifier.align(Alignment.BottomEnd).padding(32.dp),horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     AnimatedVisibility(
                         visible = expand,
                         enter = slideInVertically { it } + fadeIn(),

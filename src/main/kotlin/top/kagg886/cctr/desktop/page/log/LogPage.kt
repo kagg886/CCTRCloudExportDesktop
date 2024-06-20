@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,6 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.window.Notification
 import moe.tlaster.precompose.navigation.RouteBuilder
 import moe.tlaster.precompose.navigation.path
 import moe.tlaster.precompose.navigation.transition.NavTransition
@@ -49,8 +47,12 @@ fun LogPage(taskId: String, goBack: () -> Unit = {}) {
                 IconButton(onClick = { goBack() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "go_back")
                 }
-                LazyColumn {
+                val listState = rememberLazyListState()
+                LazyColumn(state = listState) {
                     items((state as LogViewModelState.ShowLog).log) {
+                        LaunchedEffect(Unit) {
+                            listState.scrollToItem((state as LogViewModelState.ShowLog).log.size)
+                        }
                         var showMultiLine by remember {
                             mutableStateOf(false)
                         }
