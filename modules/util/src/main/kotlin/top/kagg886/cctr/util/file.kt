@@ -64,11 +64,11 @@ fun File.unzip(out: File = File(this.parent, this.nameWithoutExtension)) {
     var zipEntry: ZipEntry? = null
 
     if (!out.exists()) {
-        out.mkdir()
+        out.mkdirs()
     }
     val bufferedInputStream = BufferedInputStream(zipInputStream)
     while ((zipInputStream.nextEntry?.also { zipEntry = it }) != null) {
-        val file = File(out.absolutePath + "/" + zipEntry!!.name)
+        val file = out.absoluteFile.resolve(zipEntry!!.name)
         if (zipEntry!!.isDirectory) {
             file.mkdirs()
             continue
