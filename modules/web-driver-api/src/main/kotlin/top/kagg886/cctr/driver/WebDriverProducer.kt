@@ -9,6 +9,7 @@ internal object WebDriverProducer {
     var init = false
     private lateinit var driverFile: File
     private lateinit var executableFile: File
+    private var headless: Boolean = true
 
 
     fun newHeadlessDriver(): EdgeDriver {
@@ -18,7 +19,9 @@ internal object WebDriverProducer {
         return EdgeDriver(EdgeDriverService.Builder().usingDriverExecutable(driverFile).usingAnyFreePort().build(),
             object : EdgeOptions() {
                 init {
-                    addArguments("headless")
+                    if (headless) {
+                        addArguments("headless")
+                    }
                     addArguments("--disable-gpu")
                     addArguments("lang=lang=zh_CN.UTF-8")
                     setBinary(executableFile)
@@ -26,13 +29,13 @@ internal object WebDriverProducer {
             })
     }
 
-    fun init(driverFile: File, edgeExecutable: File) {
+    fun init(driverFile: File, edgeExecutable: File,headless:Boolean = true) {
         check(!init) {
             "please don't call init() again"
         }
         this@WebDriverProducer.driverFile = driverFile
         this@WebDriverProducer.executableFile = edgeExecutable
-
+        this@WebDriverProducer.headless = headless
         init = true
     }
 }

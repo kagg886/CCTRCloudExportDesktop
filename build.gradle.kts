@@ -65,8 +65,7 @@ compose.desktop {
             targetFormats(TargetFormat.Exe, TargetFormat.AppImage)
             packageName = "CCTRCloudExportDesktop"
             packageVersion = "1.0.0"
-//            includeAllModules = true
-            modules("java.naming")
+            includeAllModules = true
             buildTypes {
                 release {
                     proguard {

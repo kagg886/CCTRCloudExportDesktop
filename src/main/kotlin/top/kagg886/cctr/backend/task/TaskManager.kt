@@ -3,13 +3,16 @@ package top.kagg886.cctr.backend.task
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import top.kagg886.cctr.api.CCTRUser
-import top.kagg886.cctr.api.modules.*
+import top.kagg886.cctr.api.modules.QueryModel
+import top.kagg886.cctr.api.modules.queryQuestionList
 import top.kagg886.cctr.backend.dao.Task
-import top.kagg886.cctr.backend.service.TaskService
 import top.kagg886.cctr.backend.dao.Tasks
-import top.kagg886.cctr.backend.dao.Tasks.ExportType.*
+import top.kagg886.cctr.backend.dao.Tasks.ExportType.IMG
+import top.kagg886.cctr.backend.dao.Tasks.ExportType.PDF
+import top.kagg886.cctr.backend.service.TaskService
 import top.kagg886.cctr.backend.util.error
 import top.kagg886.cctr.backend.util.info
+import top.kagg886.cctr.desktop.trayChannel
 import top.kagg886.cctr.desktop.util.convertToPDF
 import top.kagg886.cctr.desktop.util.root_file
 import top.kagg886.cctr.driver.WebDriverDispatcher
@@ -19,7 +22,6 @@ import top.kagg886.cctr.util.useTempDictionary
 import top.kagg886.cctr.util.useTempDictionarySuspend
 import top.kagg886.cctr.util.zip
 import java.awt.image.BufferedImage
-import java.io.File
 import java.time.LocalDateTime
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -98,7 +100,7 @@ object TaskManager {
             task.info("登录成功")
 
             val questions = buildMap big@{
-                task.config.map { (pr, map) ->
+                task.config.filter { (_, map) -> map.isNotEmpty() }.map { (pr, map) ->
                     async(Dispatchers.IO) {
                         this@big[pr] = buildMap small@{
                             map.map { (cType, qType) ->
@@ -120,7 +122,7 @@ object TaskManager {
                     }
                 }.awaitAll()
             }
-            val all = questions.flatMap { it.value.flatMap { it1 -> it1.value } }.size
+            val all = questions.toMap().flatMap { it.value.flatMap { it1 -> it1.value } }.size
             task.info("查询需要导出的题目成功，共${all}个")
             val progressChannel = Channel<Int>()
             var progress = 0
@@ -155,27 +157,39 @@ object TaskManager {
                                         if (it.hasOptions) {
                                             for (option in it.options) {
                                                 if (option.isTrue) {
-                                                    i2.add(driver.captchaImage("""
+                                                    i2.add(
+                                                        driver.captchaImage(
+                                                            """
                                                         <div style="padding-left: 20px;padding-top: 10px;display: flex;align-items: baseline;color: red">
                                                             <span>√</span>
                                                             ${option.html.trim()}
                                                         </div>
-                                                    """.trimIndent()))
+                                                    """.trimIndent()
+                                                        )
+                                                    )
                                                 } else {
-                                                    i2.add(driver.captchaImage("""
+                                                    i2.add(
+                                                        driver.captchaImage(
+                                                            """
                                                         <div style="padding-left: 20px;padding-top: 10px;">
                                                             ${option.html}
                                                         </div>
-                                                    """.trimIndent()))
+                                                    """.trimIndent()
+                                                        )
+                                                    )
                                                 }
                                             }
                                         } else {
-                                            i2.add(driver.captchaImage("""
-                                                <div style="padding: 30px">
-                                                    <span>答：</span>
-                                                    ${it.answer}
-                                                </div>
-                                            """.trimIndent()))
+                                            i2.add(
+                                                driver.captchaImage(
+                                                    """
+                                                        <div style="padding: 30px">
+                                                        <span>答：</span>
+                                                        ${it.answer}
+                                                        </div>
+                                                    """.trimIndent()
+                                                )
+                                            )
                                         }
                                         i2.add(divider)
                                         val img = i2.mergeVertical()
@@ -205,10 +219,11 @@ object TaskManager {
                                 for (cpFile in prFile.listFiles()!!) { //章节名
                                     for (qFile in cpFile.listFiles()!!) { //题型名
                                         qFile.listFiles()!!.toList().convertToPDF(
-                                            tmp.resolve(prFile.name).resolve(cpFile.name).resolve(qFile.name + ".pdf").apply {
-                                                parentFile.mkdirs()
-                                                createNewFile()
-                                            }
+                                            tmp.resolve(prFile.name).resolve(cpFile.name).resolve(qFile.name + ".pdf")
+                                                .apply {
+                                                    parentFile.mkdirs()
+                                                    createNewFile()
+                                                }
                                         )
                                     }
                                 }
@@ -247,9 +262,11 @@ object TaskManager {
             check(TaskService.update(task.copy(status = Tasks.TaskStatus.FAILED))) {
                 "修改数据库内任务状态失败!"
             }
+            trayChannel.send("任务id:${task.id}执行失败，原因请打开对应任务日志查看")
             return@launch
         }
         check(TaskService.update(task.copy(status = Tasks.TaskStatus.SUCCESS)))
         task.info("任务记录更新成功")
+        trayChannel.send("任务id:${task.id}执行成功")
     }
 }

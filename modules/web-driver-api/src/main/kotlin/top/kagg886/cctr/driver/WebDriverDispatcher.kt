@@ -10,6 +10,7 @@ class DispatcherConfig {
     var driverFile: File? = null
     var driverPoolSize = 10
     var executableFile: File? = null
+    var headless: Boolean = true
 }
 
 private val log = KtorSimpleLogger("WebDriverDispatcher")
@@ -24,7 +25,7 @@ object WebDriverDispatcher {
     suspend fun init(conf: DispatcherConfig.()->Unit) {
         log.info("prepare init web-driver-dispatcher...")
         val config = DispatcherConfig().apply(conf)
-        WebDriverProducer.init(config.driverFile!!,config.executableFile!!)
+        WebDriverProducer.init(config.driverFile!!,config.executableFile!!,config.headless)
         log.info("init web-driver-dispatcher success, now creating event-loop...")
         queue = Channel(capacity = config.driverPoolSize);
         for (i in 1..config.driverPoolSize) {

@@ -10,6 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.*
 import io.ktor.util.logging.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import moe.tlaster.precompose.PreComposeApp
 import moe.tlaster.precompose.navigation.NavHost
 import moe.tlaster.precompose.navigation.Navigator
@@ -26,11 +29,23 @@ import top.kagg886.cctr.desktop.util.root_file
 val LocalNavigationShower = compositionLocalOf<MutableState<Boolean>> { error("LocalNavigationShower not provided") }
 val LocalNavigation = compositionLocalOf<Navigator> { error("LocalNavigation not provided") }
 val LocalSnackBar = compositionLocalOf<SnackbarHostState> { error("LocalSnackBar not provided") }
-val LocalTray = compositionLocalOf<TrayState> { error("LocalTray not provided") }
+private val LocalTray = compositionLocalOf<TrayState> { error("LocalTray not provided") }
+val trayChannel = Channel<String>()
+
 private var log = KtorSimpleLogger("log")
+@OptIn(DelicateCoroutinesApi::class)
 fun main() {
     System.setProperty("log.path", "$root_file/log")
-    log.info("Application started, user-home is:${System.getProperty("user.home")}")
+    log.info("""
+        Application prepare start
+        
+        java-info:
+            version: ${System.getProperty("java.version")}
+            vendor: ${System.getProperty("java.vendor")}(${System.getProperty("java.vendor.url")})
+            home: ${System.getProperty("java.home")}
+        user-info:
+            root: ${System.getProperty("user.home")}
+    """.trimIndent())
 
     TaskManager.start()
     if ((root_file.canRead() && root_file.canWrite()).not()) {
@@ -54,10 +69,18 @@ fun main() {
                     },
                     LocalTray provides rememberTrayState()
                 ) {
+                    val tray = LocalTray.current
+                    val scope = rememberCoroutineScope()
+                    scope.launch {
+                        while (!trayChannel.isClosedForReceive) {
+                            val msg = trayChannel.receive()
+                            tray.sendNotification(Notification("通知",msg))
+                        }
+                    }
                     MaterialTheme {
                         Tray(
                             icon = painterResource("a.png"),
-                            state = LocalTray.current
+                            state = tray
                         ) {
                             Item(
                                 "退出程序",
