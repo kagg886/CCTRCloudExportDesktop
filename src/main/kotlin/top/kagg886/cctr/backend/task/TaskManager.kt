@@ -194,7 +194,10 @@ object TaskManager {
                                         i2.add(divider)
                                         val img = i2.mergeVertical()
                                         val file =
-                                            root.resolve(pr.practiceName).resolve(cType.name).resolve(it.questionType)
+                                            //windows尾部空格会删除，导致mkdirs成功但是createNewFile失败
+                                            root.resolve(pr.practiceName.trim())
+                                                .resolve(cType.name.trim())
+                                                .resolve(it.questionType.trim())
                                                 .resolve(it.id + ".png")
                                                 .apply {
                                                     if (!exists()) {
